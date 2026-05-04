@@ -30,6 +30,8 @@ orders_users = {}
 
 MENU_BUTTONS = ["🏠 Accommodation", "🚕 Taxi", "🍔 Food", "🔙 Back", "💬 Support"]
 
+CANCEL_TEXT = "❌ Cancel"
+
 # ---------------- MENU ----------------
 
 def main_menu():
@@ -110,6 +112,13 @@ async def send_housing(message, index=0):
 
     await message.answer("👇 Contact for booking:", reply_markup=kb)
 
+# ---------------- CANCEL SYSTEM (NEW) ----------------
+
+@dp.message_handler(lambda m: m.text == CANCEL_TEXT, state="*")
+async def cancel_any_state(message: types.Message, state: FSMContext):
+    await state.finish()
+    await message.answer("❌ Cancelled", reply_markup=main_menu())
+
 # ---------------- TAXI ----------------
 
 def is_menu(text: str):
@@ -146,20 +155,29 @@ async def housing(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data.startswith("house_"))
 async def switch_house(callback: types.CallbackQuery):
-
     index = int(callback.data.split("_")[1])
     await callback.answer()
     await send_housing(callback.message, index)
 
-# ---------------- TAXI ----------------
+# ---------------- TAXI START ----------------
 
 @dp.message_handler(lambda m: m.text == "🚕 Taxi")
 async def taxi_start(message: types.Message):
-    await message.answer("🚕 Enter pickup location:")
+
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add(CANCEL_TEXT)
+
+    await message.answer("🚕 Enter pickup location:", reply_markup=kb)
     await TaxiOrder.from_location.set()
+
+# ---------------- TAXI FROM ----------------
 
 @dp.message_handler(state=TaxiOrder.from_location)
 async def taxi_from(message: types.Message, state: FSMContext):
+
+    if message.text == CANCEL_TEXT:
+        await state.finish()
+        return await message.answer("❌ Cancelled", reply_markup=main_menu())
 
     if is_menu(message.text):
         return await message.answer("❗ Enter real pickup address.")
@@ -174,8 +192,14 @@ async def taxi_from(message: types.Message, state: FSMContext):
     await message.answer("📍 Enter destination:")
     await TaxiOrder.to_location.set()
 
+# ---------------- TAXI TO ----------------
+
 @dp.message_handler(state=TaxiOrder.to_location)
 async def taxi_to(message: types.Message, state: FSMContext):
+
+    if message.text == CANCEL_TEXT:
+        await state.finish()
+        return await message.answer("❌ Cancelled", reply_markup=main_menu())
 
     if is_menu(message.text):
         return await message.answer("❗ Enter real destination.")
