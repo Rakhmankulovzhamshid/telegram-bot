@@ -15,7 +15,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
 
 # ---------------- CONFIG ----------------
 
-TOKEN = "8588146532:AAEmHwZQw96mh0CfvtBObaKPsw05IgiVrtM"
+TOKEN = ""
 ADMIN_ID = 8687088054
 ADMIN_USERNAME = "Z7717717"
 
