@@ -1,1 +1,27 @@
-
+[
+  {
+    "id": 1,
+    "title": "ROOM ROME 🔥",
+    "description": "Monteverde, quiet area. Shared apartment with 2 tenants. 2 bathrooms, kitchen, living room, balcony.",
+    "price": "€500 / month",
+    "address": "Monteverde, Rome, Italy",
+    "photos": [
+      "photos/room1.jpg",
+      "photos/room2.jpg",
+      "photos/room3.jpg",
+      "photos/room4.jpg"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "ROOM LANCIANI 🏡",
+    "description": "Single room in Rome. Fully furnished apartment near Via Rodolfo Lanciani.",
+    "price": "€350 + €50",
+    "address": "Via Rodolfo Lanciani, Rome, Italy",
+    "photos": [
+      "photos/apt2_1.jpg",
+      "photos/apt2_2.jpg",
+      "photos/apt2_3.jpg"
+    ]
+  }
+]
