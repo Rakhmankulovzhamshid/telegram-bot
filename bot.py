@@ -1,5 +1,6 @@
 import random
 import requests
+import os
 from urllib.parse import quote_plus
 
 from geopy.geocoders import Nominatim
@@ -15,7 +16,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
 
 # ---------------- CONFIG ----------------
 
-TOKEN = ""
+TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = 8687088054
 ADMIN_USERNAME = "Z7717717"
 
