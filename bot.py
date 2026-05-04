@@ -1,0 +1,304 @@
+import random
+import requests
+from urllib.parse import quote_plus
+
+from geopy.geocoders import Nominatim
+
+from aiogram import Bot, Dispatcher, types
+from aiogram.utils import executor
+
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
+
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
+
+# ---------------- CONFIG ----------------
+
+TOKEN = "8588146532:AAEmHwZQw96mh0CfvtBObaKPsw05IgiVrtM"
+ADMIN_ID = 8687088054
+ADMIN_USERNAME = "Z7717717"
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher(bot, storage=MemoryStorage())
+
+geolocator = Nominatim(user_agent="service_bot_v2", timeout=5)
+
+orders_users = {}
+
+MENU_BUTTONS = ["🏠 Accommodation", "🚕 Taxi", "🍔 Food", "🔙 Back", "💬 Support"]
+
+# ---------------- MENU ----------------
+
+def main_menu():
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add("🏠 Accommodation")
+    kb.add("🚕 Taxi")
+    kb.add("🍔 Food")
+    kb.add("💬 Support")
+    return kb
+
+# ---------------- STATES ----------------
+
+class TaxiOrder(StatesGroup):
+    from_location = State()
+    to_location = State()
+
+# ---------------- HOUSING ----------------
+
+HOUSING_ADDRESS = [
+    "Monteverde, Rome, Italy",
+    "Via Rodolfo Lanciani, Rome, Italy"
+]
+
+HOUSING_LIST = [
+    {
+        "title": "ROOM ROME 🔥",
+        "description": (
+            "📍 Monteverde (Gianicolense), quiet area.\n"
+            "Shared apartment with 2 tenants.\n\n"
+            "✅ 2 bathrooms, kitchen, living room, balcony.\n"
+            "🏷️ €500 / month (all included)\n"
+            "📆 Long-term rent.\n"
+            "👤 Preferably female tenant."
+        ),
+        "price": "€500 / month",
+        "photos": [
+            "photos/room1.jpg",
+            "photos/room2.jpg",
+            "photos/room3.jpg",
+            "photos/room4.jpg"
+        ]
+    },
+    {
+        "title": "ROOM LANCIANI 🏡",
+        "description": (
+            "Single room in Rome.\n\n"
+            "Fully furnished apartment near Via Rodolfo Lanciani.\n"
+            "Well connected area with transport and services.\n\n"
+            "For working professionals only.\n"
+            "€350 + €50 utilities."
+        ),
+        "price": "€350 + €50",
+        "photos": [
+            "photos/apt2_1.jpg",
+            "photos/apt2_2.jpg",
+            "photos/apt2_3.jpg",
+            "photos/apt2_4.jpg",
+            "photos/apt2_5.jpg",
+            "photos/apt2_6.jpg"
+        ]
+    }
+]
+
+# ---------------- HOUSING VIEW ----------------
+
+async def send_housing(message, index=0):
+
+    item = HOUSING_LIST[index]
+    photos = item["photos"]
+
+    media = []
+
+    for i, photo in enumerate(photos):
+        try:
+            if i == 0:
+                media.append(InputMediaPhoto(
+                    media=open(photo, "rb"),
+                    caption=f"""🏠 {item['title']}
+
+{item['description']}
+
+💰 {item['price']}"""
+                ))
+            else:
+                media.append(InputMediaPhoto(media=open(photo, "rb")))
+        except:
+            continue
+
+    if media:
+        await bot.send_media_group(message.chat.id, media=media)
+
+    kb = InlineKeyboardMarkup(row_width=2)
+
+    if index > 0:
+        kb.insert(InlineKeyboardButton("⬅️ Prev", callback_data=f"house_{index-1}"))
+
+    if index < len(HOUSING_LIST) - 1:
+        kb.insert(InlineKeyboardButton("Next ➡️", callback_data=f"house_{index+1}"))
+
+    kb.add(
+        InlineKeyboardButton(
+            "🗺 Map",
+            url=f"https://www.google.com/maps/search/?api=1&query={quote_plus(HOUSING_ADDRESS[index])}"
+        ),
+        InlineKeyboardButton("💬 Contact Admin", url=f"https://t.me/{ADMIN_USERNAME}")
+    )
+
+    await message.answer("👇 Contact for booking:", reply_markup=kb)
+
+# ---------------- TAXI ----------------
+
+def is_menu(text: str):
+    return text in MENU_BUTTONS
+
+def safe_geocode(query):
+    try:
+        return geolocator.geocode(query)
+    except:
+        return None
+
+def calculate_distance(coord1, coord2):
+    try:
+        url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=false"
+        r = requests.get(url, timeout=5)
+        data = r.json()
+        if data.get("routes"):
+            return data["routes"][0]["distance"] / 1000
+    except:
+        pass
+    return 1.0
+
+# ---------------- START ----------------
+
+@dp.message_handler(commands=['start'])
+async def start(message: types.Message):
+    await message.answer("Welcome 👋", reply_markup=main_menu())
+
+# ---------------- HOUSING ----------------
+
+@dp.message_handler(lambda m: m.text == "🏠 Accommodation")
+async def housing(message: types.Message):
+    await send_housing(message, 0)
+
+@dp.callback_query_handler(lambda c: c.data.startswith("house_"))
+async def switch_house(callback: types.CallbackQuery):
+
+    index = int(callback.data.split("_")[1])
+    await callback.answer()
+    await send_housing(callback.message, index)
+
+# ---------------- TAXI ----------------
+
+@dp.message_handler(lambda m: m.text == "🚕 Taxi")
+async def taxi_start(message: types.Message):
+    await message.answer("🚕 Enter pickup location:")
+    await TaxiOrder.from_location.set()
+
+@dp.message_handler(state=TaxiOrder.from_location)
+async def taxi_from(message: types.Message, state: FSMContext):
+
+    if is_menu(message.text):
+        return await message.answer("❗ Enter real pickup address.")
+
+    loc = safe_geocode(message.text)
+
+    if not loc:
+        return await message.answer("❌ Address not found.")
+
+    await state.update_data(from_coords=(loc.latitude, loc.longitude), from_text=message.text)
+
+    await message.answer("📍 Enter destination:")
+    await TaxiOrder.to_location.set()
+
+@dp.message_handler(state=TaxiOrder.to_location)
+async def taxi_to(message: types.Message, state: FSMContext):
+
+    if is_menu(message.text):
+        return await message.answer("❗ Enter real destination.")
+
+    loc = safe_geocode(message.text)
+
+    if not loc:
+        return await message.answer("❌ Destination not found.")
+
+    data = await state.get_data()
+
+    from_coords = data["from_coords"]
+    from_text = data["from_text"]
+
+    to_coords = (loc.latitude, loc.longitude)
+    to_text = message.text
+
+    distance = calculate_distance(from_coords, to_coords)
+    price = round(3 + distance * 1.8, 2)
+
+    maps = f"https://www.google.com/maps/dir/{quote_plus(from_text)}/{quote_plus(to_text)}"
+
+    order_id = random.randint(1000, 9999)
+    orders_users[order_id] = message.from_user.id
+
+    user = message.from_user
+
+    text = (
+        f"🚕 ORDER #{order_id}\n\n"
+        f"👤 Client: {user.full_name}\n"
+        f"📛 Username: @{user.username if user.username else 'no_username'}\n"
+        f"🆔 ID: {user.id}\n\n"
+        f"📍 From: {from_text}\n"
+        f"📍 To: {to_text}\n\n"
+        f"📏 Distance: {distance:.2f} km\n"
+        f"💰 Price: €{price}\n\n"
+        f"🗺 Route:\n{maps}"
+    )
+
+    await message.answer(
+        text,
+        reply_markup=InlineKeyboardMarkup().add(
+            InlineKeyboardButton("💬 Contact Admin", url=f"https://t.me/{ADMIN_USERNAME}")
+        )
+    )
+
+    kb = InlineKeyboardMarkup()
+    kb.add(
+        InlineKeyboardButton("✅ Accept", callback_data=f"accept_{order_id}"),
+        InlineKeyboardButton("❌ Reject", callback_data=f"reject_{order_id}")
+    )
+
+    await bot.send_message(ADMIN_ID, text, reply_markup=kb)
+
+    await state.finish()
+
+# ---------------- ADMIN ----------------
+
+@dp.callback_query_handler(lambda c: c.data.startswith("accept_") or c.data.startswith("reject_"))
+async def admin(callback: types.CallbackQuery):
+
+    action, oid = callback.data.split("_")
+    oid = int(oid)
+
+    user_id = orders_users.get(oid)
+
+    msg = "Accepted 👍" if action == "accept" else "Rejected ❌"
+
+    if user_id:
+        await bot.send_message(user_id, msg)
+
+    await callback.answer("Done")
+
+# ---------------- SUPPORT ----------------
+
+@dp.message_handler(lambda m: m.text == "💬 Support")
+async def support(message: types.Message):
+    kb = InlineKeyboardMarkup()
+    kb.add(InlineKeyboardButton("💬 Chat with Admin", url=f"https://t.me/{ADMIN_USERNAME}"))
+    await message.answer("Contact support 👇", reply_markup=kb)
+
+# ---------------- OTHER ----------------
+
+@dp.message_handler(lambda m: m.text == "🍔 Food")
+async def food(message: types.Message):
+    await message.answer("🍔 Coming soon", reply_markup=main_menu())
+
+@dp.message_handler(lambda m: m.text == "🔙 Back")
+async def back(message: types.Message):
+    await message.answer("Main menu 👇", reply_markup=main_menu())
+
+@dp.message_handler()
+async def fallback(message: types.Message):
+    await message.answer("Use menu 👇", reply_markup=main_menu())
+
+# ---------------- RUN ----------------
+
+if __name__ == "__main__":
+    executor.start_polling(dp, skip_updates=True)
