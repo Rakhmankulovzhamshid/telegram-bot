@@ -1,6 +1,7 @@
 import random
 import requests
 import os
+import json
 from urllib.parse import quote_plus
 
 from geopy.geocoders import Nominatim
@@ -45,59 +46,30 @@ class TaxiOrder(StatesGroup):
     from_location = State()
     to_location = State()
 
-# ---------------- HOUSING ----------------
+# ---------------- HOUSING JSON ----------------
 
-HOUSING_ADDRESS = [
-    "Monteverde, Rome, Italy",
-    "Via Rodolfo Lanciani, Rome, Italy"
-]
-
-HOUSING_LIST = [
-    {
-        "title": "ROOM ROME 🔥",
-        "description": (
-            "📍 Monteverde (Gianicolense), quiet area.\n"
-            "Shared apartment with 2 tenants.\n\n"
-            "✅ 2 bathrooms, kitchen, living room, balcony.\n"
-            "🏷️ €500 / month (all included)\n"
-            "📆 Long-term rent.\n"
-            "👤 Preferably female tenant."
-        ),
-        "price": "€500 / month",
-        "photos": [
-            "photos/room1.jpg",
-            "photos/room2.jpg",
-            "photos/room3.jpg",
-            "photos/room4.jpg"
-        ]
-    },
-    {
-        "title": "ROOM LANCIANI 🏡",
-        "description": (
-            "Single room in Rome.\n\n"
-            "Fully furnished apartment near Via Rodolfo Lanciani.\n"
-            "Well connected area with transport and services.\n\n"
-            "For working professionals only.\n"
-            "€350 + €50 utilities."
-        ),
-        "price": "€350 + €50",
-        "photos": [
-            "photos/apt2_1.jpg",
-            "photos/apt2_2.jpg",
-            "photos/apt2_3.jpg",
-            "photos/apt2_4.jpg",
-            "photos/apt2_5.jpg",
-            "photos/apt2_6.jpg"
-        ]
-    }
-]
+def load_houses():
+    try:
+        with open("houses.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return []
 
 # ---------------- HOUSING VIEW ----------------
 
 async def send_housing(message, index=0):
 
-    item = HOUSING_LIST[index]
-    photos = item["photos"]
+    houses = load_houses()
+
+    if not houses:
+        await message.answer("❌ No housing available")
+        return
+
+    if index < 0 or index >= len(houses):
+        return
+
+    item = houses[index]
+    photos = item.get("photos", [])
 
     media = []
 
@@ -125,13 +97,13 @@ async def send_housing(message, index=0):
     if index > 0:
         kb.insert(InlineKeyboardButton("⬅️ Prev", callback_data=f"house_{index-1}"))
 
-    if index < len(HOUSING_LIST) - 1:
+    if index < len(houses) - 1:
         kb.insert(InlineKeyboardButton("Next ➡️", callback_data=f"house_{index+1}"))
 
     kb.add(
         InlineKeyboardButton(
             "🗺 Map",
-            url=f"https://www.google.com/maps/search/?api=1&query={quote_plus(HOUSING_ADDRESS[index])}"
+            url=f"https://www.google.com/maps/search/?api=1&query={quote_plus(item['address'])}"
         ),
         InlineKeyboardButton("💬 Contact Admin", url=f"https://t.me/{ADMIN_USERNAME}")
     )
