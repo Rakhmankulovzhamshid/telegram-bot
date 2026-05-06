@@ -167,10 +167,10 @@ async def taxi_start(message: types.Message):
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add(CANCEL_TEXT)
 
-    await message.answer(🚕 Цены в боте — это тарифы городского такси.  
-    Мы предоставляем поездки на 20% дешевле этих цен.
-    
-        Enter pickup location:", reply_markup=kb)
+   await message.answer("""🚕 Цены в боте — это тарифы городского такси.  
+Мы предоставляем поездки на 20% дешевле этих цен.
+
+Enter pickup location:""", reply_markup=kb)
     await TaxiOrder.from_location.set()
 
 @dp.message_handler(state=TaxiOrder.from_location)
