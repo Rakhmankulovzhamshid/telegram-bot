@@ -19,7 +19,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
 
 TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = 8687088054
-ADMIN_USERNAME = "Z7717717"
+ADMIN_USERNAME = "Orderly1"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -167,7 +167,10 @@ async def taxi_start(message: types.Message):
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add(CANCEL_TEXT)
 
-    await message.answer("🚕 Enter pickup location:", reply_markup=kb)
+    await message.answer(🚕 Цены в боте — это тарифы городского такси.  
+    Мы предоставляем поездки на 20% дешевле этих цен.
+    
+        Enter pickup location:", reply_markup=kb)
     await TaxiOrder.from_location.set()
 
 @dp.message_handler(state=TaxiOrder.from_location)
@@ -271,7 +274,7 @@ async def admin(callback: types.CallbackQuery):
 
 # ---------------- GEORGIAN FOOD ----------------
 
-@dp.message_handler(lambda m: m.text == "🍽 Georgian Food")
+@dp.message_handler(lambda m: m.text == "🍽 Food")
 async def georgian_food(message: types.Message):
 
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
