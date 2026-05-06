@@ -291,6 +291,15 @@ async def khinkali(message: types.Message):
         "Цены доступные 👍"
     )
 
+      # кнопка заказа
+    kb = InlineKeyboardMarkup()
+    kb.add(
+        InlineKeyboardButton(
+            "🛒 Order / Заказать",
+            url=f"https://t.me/{ADMIN_USERNAME}"
+        )
+    )
+
     try:
         with open("photos/khinkali.jpg", "rb") as photo:
             await message.answer_photo(photo=photo, caption=caption)
