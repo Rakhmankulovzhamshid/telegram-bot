@@ -291,7 +291,6 @@ async def khinkali(message: types.Message):
         "Цены доступные 👍"
     )
 
-      # кнопка заказа
     kb = InlineKeyboardMarkup()
     kb.add(
         InlineKeyboardButton(
@@ -302,9 +301,9 @@ async def khinkali(message: types.Message):
 
     try:
         with open("photos/khinkali.jpg", "rb") as photo:
-            await message.answer_photo(photo=photo, caption=caption)
+            await message.answer_photo(photo=photo, caption=caption, reply_markup=kb)
     except:
-        await message.answer(caption)
+        await message.answer(caption, reply_markup=kb)
         await message.answer("⚠️ Image not found")
 
 # ---------------- SUPPORT ----------------
