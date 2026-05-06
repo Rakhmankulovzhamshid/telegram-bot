@@ -291,10 +291,12 @@ async def khinkali(message: types.Message):
         "Цены доступные 👍"
     )
 
-    await message.answer_photo(
-        photo="https://upload.wikimedia.org/wikipedia/commons/3/3c/Khinkali_551.jpg",
-        caption=caption
-    )
+    try:
+        with open("photos/khinkali.jpg", "rb") as photo:
+            await message.answer_photo(photo=photo, caption=caption)
+    except:
+        await message.answer(caption)
+        await message.answer("⚠️ Image not found")
 
 # ---------------- SUPPORT ----------------
 
