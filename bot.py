@@ -28,7 +28,7 @@ geolocator = Nominatim(user_agent="service_bot_v2", timeout=5)
 
 orders_users = {}
 
-MENU_BUTTONS = ["🏠 Accommodation", "🚕 Taxi", "🍔 Food", "🔙 Back", "💬 Support"]
+MENU_BUTTONS = ["🏠 Accommodation", "🚕 Taxi", "🍽 Georgian Food", "🔙 Back", "💬 Support"]
 
 CANCEL_TEXT = "❌ Cancel"
 
@@ -38,7 +38,7 @@ def main_menu():
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add("🏠 Accommodation")
     kb.add("🚕 Taxi")
-    kb.add("🍔 Food")
+    kb.add("🍽 Georgian Food")
     kb.add("💬 Support")
     return kb
 
@@ -112,7 +112,7 @@ async def send_housing(message, index=0):
 
     await message.answer("👇 Contact for booking:", reply_markup=kb)
 
-# ---------------- CANCEL SYSTEM (NEW) ----------------
+# ---------------- CANCEL ----------------
 
 @dp.message_handler(lambda m: m.text == CANCEL_TEXT, state="*")
 async def cancel_any_state(message: types.Message, state: FSMContext):
@@ -159,7 +159,7 @@ async def switch_house(callback: types.CallbackQuery):
     await callback.answer()
     await send_housing(callback.message, index)
 
-# ---------------- TAXI START ----------------
+# ---------------- TAXI ----------------
 
 @dp.message_handler(lambda m: m.text == "🚕 Taxi")
 async def taxi_start(message: types.Message):
@@ -169,8 +169,6 @@ async def taxi_start(message: types.Message):
 
     await message.answer("🚕 Enter pickup location:", reply_markup=kb)
     await TaxiOrder.from_location.set()
-
-# ---------------- TAXI FROM ----------------
 
 @dp.message_handler(state=TaxiOrder.from_location)
 async def taxi_from(message: types.Message, state: FSMContext):
@@ -191,8 +189,6 @@ async def taxi_from(message: types.Message, state: FSMContext):
 
     await message.answer("📍 Enter destination:")
     await TaxiOrder.to_location.set()
-
-# ---------------- TAXI TO ----------------
 
 @dp.message_handler(state=TaxiOrder.to_location)
 async def taxi_to(message: types.Message, state: FSMContext):
@@ -273,6 +269,33 @@ async def admin(callback: types.CallbackQuery):
 
     await callback.answer("Done")
 
+# ---------------- GEORGIAN FOOD ----------------
+
+@dp.message_handler(lambda m: m.text == "🍽 Georgian Food")
+async def georgian_food(message: types.Message):
+
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add("🥟 Khinkali")
+    kb.add("🔙 Back")
+
+    await message.answer("🍽 Choose Georgian dish / Выберите блюдо:", reply_markup=kb)
+
+@dp.message_handler(lambda m: m.text == "🥟 Khinkali")
+async def khinkali(message: types.Message):
+
+    caption = (
+        "🥟 Khinkali\n\n"
+        "🇬🇧 If you're interested in delicious Georgian khinkali 😋 let me know!\n"
+        "Prices are affordable 👍\n\n"
+        "🇷🇺 Если вас интересуют вкуснейшие грузинские хинкали 😋 дайте знать!\n"
+        "Цены доступные 👍"
+    )
+
+    await message.answer_photo(
+        photo="https://upload.wikimedia.org/wikipedia/commons/3/3c/Khinkali_551.jpg",
+        caption=caption
+    )
+
 # ---------------- SUPPORT ----------------
 
 @dp.message_handler(lambda m: m.text == "💬 Support")
@@ -282,10 +305,6 @@ async def support(message: types.Message):
     await message.answer("Contact support 👇", reply_markup=kb)
 
 # ---------------- OTHER ----------------
-
-@dp.message_handler(lambda m: m.text == "🍔 Food")
-async def food(message: types.Message):
-    await message.answer("🍔 Coming soon", reply_markup=main_menu())
 
 @dp.message_handler(lambda m: m.text == "🔙 Back")
 async def back(message: types.Message):
