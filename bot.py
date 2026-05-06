@@ -28,7 +28,7 @@ geolocator = Nominatim(user_agent="service_bot_v2", timeout=5)
 
 orders_users = {}
 
-MENU_BUTTONS = ["🏠 Accommodation", "🚕 Taxi", "🍽 Georgian Food", "🔙 Back", "💬 Support"]
+MENU_BUTTONS = ["🏠 Accommodation", "🚕 Taxi", "🍽 Food", "🔙 Back", "💬 Support"]
 
 CANCEL_TEXT = "❌ Cancel"
 
@@ -38,7 +38,7 @@ def main_menu():
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add("🏠 Accommodation")
     kb.add("🚕 Taxi")
-    kb.add("🍽 Georgian Food")
+    kb.add("🍽 Food")
     kb.add("💬 Support")
     return kb
 
@@ -273,10 +273,10 @@ async def admin(callback: types.CallbackQuery):
 
     await callback.answer("Done")
 
-# ---------------- GEORGIAN FOOD ----------------
+# ---------------- FOOD ----------------
 
 @dp.message_handler(lambda m: m.text == "🍽 Food")
-async def georgian_food(message: types.Message):
+async def food_menu(message: types.Message):
 
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add("🥟 Khinkali")
@@ -297,10 +297,7 @@ async def khinkali(message: types.Message):
 
     kb = InlineKeyboardMarkup()
     kb.add(
-        InlineKeyboardButton(
-            "🛒 Order / Заказать",
-            url=f"https://t.me/{ADMIN_USERNAME}"
-        )
+        InlineKeyboardButton("🛒 Order / Заказать", url=f"https://t.me/{ADMIN_USERNAME}")
     )
 
     try:
@@ -308,7 +305,6 @@ async def khinkali(message: types.Message):
             await message.answer_photo(photo=photo, caption=caption, reply_markup=kb)
     except:
         await message.answer(caption, reply_markup=kb)
-        await message.answer("⚠️ Image not found")
 
 # ---------------- SUPPORT ----------------
 
@@ -318,15 +314,11 @@ async def support(message: types.Message):
     kb.add(InlineKeyboardButton("💬 Chat with Admin", url=f"https://t.me/{ADMIN_USERNAME}"))
     await message.answer("Contact support 👇", reply_markup=kb)
 
-# ---------------- OTHER ----------------
+# ---------------- BACK ----------------
 
 @dp.message_handler(lambda m: m.text == "🔙 Back")
 async def back(message: types.Message):
     await message.answer("Main menu 👇", reply_markup=main_menu())
-
-@dp.message_handler()
-async def fallback(message: types.Message):
-    await message.answer("Use menu 👇", reply_markup=main_menu())
 
 # ---------------- RUN ----------------
 
