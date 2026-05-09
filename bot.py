@@ -282,7 +282,7 @@ async def food_menu(message: types.Message):
     kb.add("🔙 Back")
 
     await message.answer(
-        "🍽 Choose Georgian dish / Выберите блюдо:",
+        "🍽 Choose dish / Выберите блюдо:",
         reply_markup=kb
     )
 
