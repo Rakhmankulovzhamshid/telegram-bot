@@ -274,7 +274,6 @@ async def admin(callback: types.CallbackQuery):
     await callback.answer("Done")
 
 # ---------------- FOOD ----------------
-
 @dp.message_handler(lambda m: m.text == "🍽 Food")
 async def food_menu(message: types.Message):
 
@@ -282,27 +281,42 @@ async def food_menu(message: types.Message):
     kb.add("🥟 Khinkali")
     kb.add("🔙 Back")
 
-    await message.answer("🍽 Choose Georgian dish / Выберите блюдо:", reply_markup=kb)
+    await message.answer(
+        "🍽 Choose Georgian dish / Выберите блюдо:",
+        reply_markup=kb
+    )
 
 @dp.message_handler(lambda m: m.text == "🥟 Khinkali")
 async def khinkali(message: types.Message):
 
     caption = (
         "🥟 Khinkali\n\n"
-        "🇬🇧 If you're interested in delicious Georgian khinkali 😋 let me know!\n"
-        "Prices are affordable 👍\n\n"
-        "🇷🇺 Если вас интересуют вкуснейшие грузинские хинкали 😋 дайте знать!\n"
-        "Цены доступные 👍"
+
+        "🇷🇺 Домашние вкусные, сочные хинкали из говядины 😋\n\n"
+        "Такую вкуснятину вы ещё не пробовали.\n\n"
+
+        "💶 1 шт — 1€\n"
+        "📦 Минимальный заказ: 20 шт\n\n"
+
+        "🚚 Доставка в районы:\n"
+        "Municipio XI, XII, XIII — 8€"
     )
 
     kb = InlineKeyboardMarkup()
     kb.add(
-        InlineKeyboardButton("🛒 Order / Заказать", url=f"https://t.me/{ADMIN_USERNAME}")
+        InlineKeyboardButton(
+            "🛒 Order / Заказать",
+            url=f"https://t.me/{ADMIN_USERNAME}"
+        )
     )
 
     try:
         with open("photos/khinkali.jpg", "rb") as photo:
-            await message.answer_photo(photo=photo, caption=caption, reply_markup=kb)
+            await message.answer_photo(
+                photo=photo,
+                caption=caption,
+                reply_markup=kb
+            )
     except:
         await message.answer(caption, reply_markup=kb)
 
